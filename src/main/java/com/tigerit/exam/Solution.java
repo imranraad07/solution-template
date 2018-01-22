@@ -199,8 +199,6 @@ class JoinQuery {
 
 public class Solution implements Runnable {
 
-    JoinQuery joinQuery;
-
     private Table getTable() {
         Table myTable = new Table();
 
@@ -234,7 +232,11 @@ public class Solution implements Runnable {
     public void run() {
 
         int testCases = readLineAsInteger();
+        int currentCase = 1;
         while (testCases-- > 0) {
+            printLine("Test: " + currentCase);
+            currentCase++;
+
             int numOfTables = readLineAsInteger();
 
             HashMap<String, Integer> tableName = new HashMap<>();
@@ -257,9 +259,9 @@ public class Solution implements Runnable {
                 statements[3] = readLine();
                 readLine();
 
-                joinQuery = new JoinQuery();
+                JoinQuery joinQuery = new JoinQuery();
                 ArrayList<Tuple> rowColIds = null;
-                int queryType = 0;
+                int queryType = 3;
 
                 inputArray = statements[1].split(" ");
                 if (statements[0].equals("SELECT *")) {
@@ -268,8 +270,6 @@ public class Solution implements Runnable {
                     } else {
                         queryType = 2;
                     }
-                } else {
-                    queryType = 3;
                 }
 
                 if (queryType == 1) {
@@ -318,28 +318,30 @@ public class Solution implements Runnable {
                     }
                 } else {
                     joinQuery.getColumSet().addAll(tables[joinQuery.getTableId1()].getColums().keySet());
-                    joinQuery.getColumSet().addAll(tables[joinQuery.getTableId1()].getColums().keySet());
+                    joinQuery.getColumSet().addAll(tables[joinQuery.getTableId2()].getColums().keySet());
                 }
 
-                for (int table1_r = 0; table1_r < tables[joinQuery.getTableId1()].getNumOfRow(); table1_r++) {
-                    for (int table2_r = 0; table2_r < tables[joinQuery.getTableId2()].getNumOfRow(); table2_r++) {
-                        if (tables[joinQuery.getTableId1()].getData()[table1_r][joinQuery.getColumnId2()] == tables[joinQuery.getTableId2()].getData()[table2_r][joinQuery.getColumnId2()]) {
+                for (int rowTable1 = 0; rowTable1 < tables[joinQuery.getTableId1()].getNumOfRow(); rowTable1++) {
+                    for (int rowTable2 = 0; rowTable2 < tables[joinQuery.getTableId2()].getNumOfRow(); rowTable2++) {
+                        if (tables[joinQuery.getTableId1()].getData()[rowTable1][joinQuery.getColumnId1()] == tables[joinQuery.getTableId2()].getData()[rowTable2][joinQuery.getColumnId2()]) {
                             ArrayList<Integer> matches = new ArrayList<>();
 
                             if (queryType == 3) {
-                                for (Tuple entry : rowColIds) {
-                                    if (entry.getX() == joinQuery.getTableId1()) {
-                                        matches.add(tables[entry.getX()].getData()[table1_r][entry.getY()]);
-                                    } else {
-                                        matches.add(tables[entry.getX()].getData()[table2_r][entry.getY()]);
+                                if (rowColIds != null) {
+                                    for (Tuple entry : rowColIds) {
+                                        if (entry.getX() == joinQuery.getTableId1()) {
+                                            matches.add(tables[joinQuery.getTableId1()].getData()[rowTable1][entry.getY()]);
+                                        } else {
+                                            matches.add(tables[joinQuery.getTableId2()].getData()[rowTable2][entry.getY()]);
+                                        }
                                     }
                                 }
                             } else {
-                                for (int table1_c = 0; table1_c < tables[joinQuery.getTableId1()].getNumOfCol(); table1_c++) {
-                                    matches.add(tables[joinQuery.getTableId1()].getData()[table1_r][table1_c]);
+                                for (int colTable1 = 0; colTable1 < tables[joinQuery.getTableId1()].getNumOfCol(); colTable1++) {
+                                    matches.add(tables[joinQuery.getTableId1()].getData()[rowTable1][colTable1]);
                                 }
-                                for (int table2_c = 0; table2_c < tables[joinQuery.getTableId2()].getNumOfCol(); table2_c++) {
-                                    matches.add(tables[joinQuery.getTableId2()].getData()[table2_r][table2_c]);
+                                for (int colTable2 = 0; colTable2 < tables[joinQuery.getTableId2()].getNumOfCol(); colTable2++) {
+                                    matches.add(tables[joinQuery.getTableId2()].getData()[rowTable2][colTable2]);
                                 }
                             }
 
@@ -347,13 +349,12 @@ public class Solution implements Runnable {
                         }
                     }
                 }
-
-                executeResults();
+                executeResults(joinQuery);
             }
         }
     }
 
-    private void executeResults() {
+    private void executeResults(JoinQuery joinQuery) {
         Collections.sort(joinQuery.getResultSet(), new Comparator<ArrayList<Integer>>() {
             @Override
             public int compare(ArrayList<Integer> o1, ArrayList<Integer> o2) {
